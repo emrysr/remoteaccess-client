@@ -163,3 +163,76 @@ function selectTab(hash) {
     });
 }
 </script>
+
+<script src="<?php echo $path; ?>Lib/user_locale.js"></script>
+<script src="<?php echo $path; ?>Lib/misc/gettext.js"></script>
+<script>
+<?php
+// use this array to store any gettext translations used in js
+$translations = array(
+    "Open Issues" => _("Open Issues")
+);
+printf("var translations = %s;\n",json_encode($translations));
+?>
+</script>
+
+<template id="github-link">
+    <span> | 
+    <a href="https://github.com/emoncms" title="<?php echo _('You can contribute to this EmonCMS Module on GitHub:') ?>" target="_blank" class="text-dark">
+        <svg class="icon"><use xlink:href="#icon-github"></use></svg>
+    </a>
+    </span>
+</template>
+
+<script src="<?php echo $path; ?>Lib/moment.min.js"></script>
+<script>
+$(function(){
+    // get github repo details from github api.
+    var repoDetailsUrl = "https://api.github.com/repos/emoncms/remoteaccess-client";
+    var template = document.querySelector('#github-link');
+    var container = document.querySelector("#footer");
+    var lineCharacter = "-";
+    var newline = "\n";
+    var repoDetailsId = "repo-details";
+    var repoDetails; // store the container node
+
+    if (template && container) {
+        var clone = document.importNode(template.content, true);
+        var span = clone.firstElementChild;
+        span.id = repoDetailsId
+    }
+    container.appendChild(span);
+    if (repoDetails = document.querySelector("#" + repoDetailsId)) {
+        $(repoDetails).on('mouseenter',function() {
+            var link = repoDetails.querySelector('a');
+            if (link && link.dataset && !link.dataset.downloaded) {
+                $.getJSON(repoDetailsUrl, function(repo) {
+                    // display data as link title (tooltip)
+                    var width = link.title.length * 1.6;
+                    var line = ''.padStart(width, lineCharacter);
+                    var updated = moment(repo.pushed_at).format("ll");
+                    // left and right align the last updated date and number of open issues
+                    var issues_and_date = [updated, [_("Open Issues"),': ', repo.open_issues].join("").padStart( (width - updated.length - _("Open Issues").length) , ' ')].join("");
+                    
+                    // direct users to the github repo on click
+                    link.href = repo.html_url;
+                    // add more detail to title
+                    link.title = [line, link.title, line, issues_and_date, "", repo.full_name, repo.description, line].join(newline)
+                    // remember that download was complete (no need for futher downloads)
+                    link.dataset.downloaded = true;
+                    // add the html to the page
+                    container.appendChild(span);
+                })
+                .fail(function(xhr, error, statusText) {
+                    // show error if issue downloading github repo details via the anonymous api request
+                    console.info(statusText, xhr.status);
+                    if(xhr && xhr.responseJSON && xhr.responseJSON.message) {
+                        console.warn(xhr.responseJSON.message)
+                    }
+                })
+            }
+        })
+    }
+
+})
+</script>

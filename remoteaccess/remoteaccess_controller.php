@@ -5,7 +5,7 @@ defined('EMONCMS_EXEC') or die('Restricted access');
 
 function remoteaccess_controller() {
 
-    global $session, $route, $linked_modules_dir, $user;
+    global $session, $path, $route, $linked_modules_dir, $user;
     
     $config_file = $linked_modules_dir."/remoteaccess-client/remoteaccess.json";
     
@@ -31,7 +31,7 @@ function remoteaccess_controller() {
             } else {
                 $config = json_decode(file_get_contents("$config_file.example"));
             }
-            return view("Modules/remoteaccess/remoteaccess_view.php", array("config"=>$config));
+            return view("Modules/remoteaccess/remoteaccess_view.php", array("path"=>$path, "config"=>$config));
         }
         
     
